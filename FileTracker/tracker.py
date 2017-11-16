@@ -9,17 +9,18 @@ import win32api as win
 class UserFile(object):
     """Class to model file data like last modified date and size"""
 
-    def __init__(self, name, size, lmd):
+    def __init__(self, name, size, lmd, uid):
         self.size = size
         self.name = name
         self.lmd = lmd
+        self.uid = uid
         self.exists = True
 
     def __lt__(self, other):
-        return self.name < other.name
+        return self.uid < other.uid
 
     def __eq__(self, other):
-        return self.name == other.name
+        return self.uid == other.uid
 
     def __str__(self):
         return "Name: "+self.name+" Size: "+str(self.size) + " LMD: "+str(self.lmd)+" Exists: " + str(self.exists)+"\n"
@@ -27,9 +28,16 @@ class UserFile(object):
     def isModified(self, other):
         return self.lmd != other.lmd or self.size != other.size
 
+def newName(filename,lmd):
+    parts=filename.split(".")
+    return parts[0]+"_"+str(lmd)+"."+parts[1]
+
+
 if(__name__ == "__main__"):
     print("-"*100)
+    uid=0;
     UserFiles = []
+    datetimeaddition=True
     filelist = os.listdir()
     for file in filelist:
         name = file
@@ -37,7 +45,8 @@ if(__name__ == "__main__"):
         lmd = stat(file).st_mtime
         print("Name: "+file+" Size: "+str(size) +
               " Last Modified Date: "+str(lmd))
-        UserFiles.append(UserFile(name, size, lmd))
+        UserFiles.append(UserFile(name, size, lmd, uid))
+        uid+=1
     spinner = Spinner()
     
     def signal_handler(signal,frame):
@@ -65,20 +74,25 @@ if(__name__ == "__main__"):
             name = file
             size = stat(file).st_size
             lmd = stat(file).st_mtime
-            f = UserFile(name, size, lmd)
+            f = UserFile(name, size, lmd, uid)
+            uid+=1
             if(UserFiles.count(f) == 0):
                 print("\rNew File Added")
+                if(datetimeaddition):
+                    os.rename(f.name,newName(f.name,f.lmd))
+                    f.name=newName(f.name,f.lmd)
                 print("File: "+f.name)
                 UserFiles.append(f)
             else:
                 f2 = UserFiles[UserFiles.index(f)]
                 if(f2.isModified(f)):
                     print("\rFile: "+f.name+" is modified.")
-                    if win.MessageBox(None,"File: "+f.name+" is modified. Backup?","File Change Alert",1) == 1:
-                        print("Backing Up File.")
+                    sourceMod=f.name in source
+                    if not sourceMod and win.MessageBox(None,"File: "+f.name+" is modified. Backup?","File Change Alert",1) == 1:
+                        print("\rBacking Up File.")
                     UserFiles.remove(f2)
                     UserFiles.append(f)
-                    sourceMod=f.name in source
+                    
                 else:
                     f2.exists = True
         if sourceMod:
