@@ -17,10 +17,10 @@ class UserFile(object):
         self.exists = True
 
     def __lt__(self, other):
-        return self.uid < other.uid
+        return self.name < other.name
 
     def __eq__(self, other):
-        return self.uid == other.uid
+        return self.name == other.name
 
     def __str__(self):
         return "Name: "+self.name+" Size: "+str(self.size) + " LMD: "+str(self.lmd)+" Exists: " + str(self.exists)+"\n"
@@ -74,14 +74,15 @@ if(__name__ == "__main__"):
             name = file
             size = stat(file).st_size
             lmd = stat(file).st_mtime
-            f = UserFile(name, size, lmd, uid)
-            uid+=1
-            if(UserFiles.count(f) == 0):
+            f = UserFile(name, size, lmd, -1)
+            if(f in UserFiles):
                 print("\rNew File Added")
                 if(datetimeaddition):
                     os.rename(f.name,newName(f.name,f.lmd))
                     f.name=newName(f.name,f.lmd)
                 print("File: "+f.name)
+                f.uid=uid
+                uid+=1
                 UserFiles.append(f)
             else:
                 f2 = UserFiles[UserFiles.index(f)]
