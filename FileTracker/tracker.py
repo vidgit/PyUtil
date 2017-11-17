@@ -5,6 +5,7 @@ from spinner import Spinner
 import sys
 import signal
 import win32api as win
+import shutil
 
 class UserFile(object):
     """Class to model file data like last modified date and size"""
@@ -32,7 +33,9 @@ def newName(filename,lmd):
     parts=filename.split(".")
     return parts[0]+"_"+str(lmd)+"."+parts[1]
 
-
+def backup(f):
+    shutil.copy(f.name,f.name+".bkp")
+    
 if(__name__ == "__main__"):
     print("-"*100)
     uid=0;
@@ -91,6 +94,7 @@ if(__name__ == "__main__"):
                     sourceMod=f.name in source
                     if not sourceMod and win.MessageBox(None,"File: "+f.name+" is modified. Backup?","File Change Alert",1) == 1:
                         print("\rBacking Up File.")
+                        backup(f)
                     UserFiles.remove(f2)
                     UserFiles.append(f)
                     
